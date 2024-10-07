@@ -20,7 +20,7 @@ Your task is to create a simple “Weather App” using Kotlin that displays the
 6. State Management: Use LiveData or StateFlow to handle the app’s state and display the weather data.
 7. Error Handling: Handle cases where the API request fails (e.g., invalid city name, network error).
 
-### Design
+#### Design
 
 The Figma link for the design can be found here: https://www.figma.com/design/zveLY7v5Hc4mXPdjaBO53y/Android-Engineer-Test?node-id=0-1&t=rVflLfjhpk647ZKC-1
 
