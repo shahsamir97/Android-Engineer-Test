@@ -22,7 +22,8 @@ Your task is to create a simple “Weather App” using Kotlin that displays the
 
 #### Design
 
-The Figma link for the design can be found here: https://www.figma.com/design/zveLY7v5Hc4mXPdjaBO53y/Android-Engineer-Test?node-id=0-1&t=rVflLfjhpk647ZKC-1
+<img width="430" alt="Default view" src="https://github.com/user-attachments/assets/b68f397f-54e3-4e00-bb4d-800c19127e52">
+<img width="430" alt="Modal Open" src="https://github.com/user-attachments/assets/db768609-3beb-4cb2-8aaf-13eaa65ebf66">
 
 #### Project Structure
 
