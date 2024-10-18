@@ -2,7 +2,8 @@ package com.example.android_engineer_test.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android_engineer_test.model.WeatherData
+import com.example.android_engineer_test.model.user.WeatherData
+import com.example.android_engineer_test.utils.createImageLink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,11 +21,25 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
 
     fun searchWeather(cityName: String) {
         _homeUiState.update { HomeUiState.Loading }
+
         viewModelScope.launch(Dispatchers.IO) {
+
             try {
-                val weatherData = homeScreenRepo.fetchWeatherDataByCityName(cityName)
-                _homeUiState.update { HomeUiState.Success(weatherData) }
-            } catch (exception: Exception) {
+                val result = homeScreenRepo.fetchWeatherDataByCityName(cityName)
+
+                result.main?.let { mainWeatherInfo ->
+                    val weatherData = WeatherData(
+                        temp = mainWeatherInfo.temp.toString(),
+                        minTemp = mainWeatherInfo.temp_min.toString(),
+                        maxTemp = mainWeatherInfo.temp_max.toString(),
+                        feelsLike = mainWeatherInfo.feels_like.toString(),
+                        iconUrl = result.weather?.let { createImageLink(it[0].icon.toString()) } ?: ""
+                    )
+
+                    _homeUiState.update { HomeUiState.Success(weatherData) }
+                } ?: throw IllegalArgumentException()
+            }
+            catch (exception: Exception) {
                 exception.printStackTrace()
                 exception.message?.let { errorMessage ->
                     _homeUiState.update { HomeUiState.Error(errorMessage) }

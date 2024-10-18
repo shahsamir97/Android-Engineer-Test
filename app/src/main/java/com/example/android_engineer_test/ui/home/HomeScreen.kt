@@ -2,7 +2,6 @@ package com.example.android_engineer_test.ui.home
 
 import android.content.res.Configuration
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,8 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -28,18 +26,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.android_engineer_test.R
-import com.example.android_engineer_test.model.WeatherData
+import com.example.android_engineer_test.model.user.WeatherData
 import com.example.android_engineer_test.ui.theme.AndroidEngineerTestTheme
 import com.example.android_engineer_test.ui.widgets.InputDialog
 import com.example.android_engineer_test.ui.widgets.VerticalSpacer
+import com.example.android_engineer_test.utils.createImageLink
 
 @Composable
 fun HomeScreen(
@@ -119,7 +121,7 @@ fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, 
                 ) {
                     Column {
                         Text(
-                            text = weatherData.main.temp.toString(),
+                            text = weatherData.temp,
                             style = MaterialTheme.typography.displayLarge,
                             fontWeight = FontWeight.Bold,
                         )
@@ -128,14 +130,24 @@ fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, 
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    Image(
-                        modifier = Modifier.size(50.dp),
-                        imageVector = Icons.Filled.Home,
-                        contentDescription = ""
+                    AsyncImage(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        model = weatherData.iconUrl, // Replace with your image URL
+                        contentDescription = weatherData.temp,
+                        placeholder = painterResource(R.drawable.baseline_image_24),
+                        error = painterResource(R.drawable.baseline_broken_image_24)
                     )
                 }
                 VerticalSpacer(8.dp)
-                ExtraInformationCards(mapOf())
+                ExtraInformationCards(
+                    mapOf(
+                        stringResource(R.string.feels_like) to weatherData.feelsLike,
+                        stringResource(R.string.min) to weatherData.minTemp,
+                        stringResource(R.string.max) to weatherData.maxTemp
+                    )
+                )
                 VerticalSpacer(8.dp)
                 Button(
                     modifier = Modifier.fillMaxWidth(),
@@ -190,6 +202,11 @@ fun ExtraInformationCards(weatherExtraInfo: Map<String, String>) {
 @Composable
 fun HomeScreenContentPreview() {
     AndroidEngineerTestTheme {
-        HomeScreenContent(homeUiState = HomeUiState.Loading, onClickSearchWeather = {})
+        HomeScreenContent(
+            homeUiState = HomeUiState.Success(
+                WeatherData(temp = "29", minTemp = "21", maxTemp = "35", feelsLike = "32", iconUrl = "")
+            ),
+            onClickSearchWeather = {}
+        )
     }
 }

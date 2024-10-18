@@ -4,4 +4,7 @@
     <string name="search_a_new_location">Search a new location</string>
     <string name="search_current_weather">Search current weather</string>
     <string name="enter_a_location">Enter a location</string>
+    <string name="feels_like">Feels Like</string>
+    <string name="min">Min</string>
+    <string name="max">Max</string>
 </resources>
