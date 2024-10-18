@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,11 +36,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.android_engineer_test.R
-import com.example.android_engineer_test.model.user.WeatherData
+import com.example.android_engineer_test.model.WeatherDataUi
 import com.example.android_engineer_test.ui.theme.AndroidEngineerTestTheme
 import com.example.android_engineer_test.ui.widgets.InputDialog
+import com.example.android_engineer_test.ui.widgets.MyProgressBar
 import com.example.android_engineer_test.ui.widgets.VerticalSpacer
-import com.example.android_engineer_test.utils.createImageLink
 
 @Composable
 fun HomeScreen(
@@ -53,7 +52,7 @@ fun HomeScreen(
 
     HomeScreenContent(
         homeUiState = homeUiState,
-        onClickSearchWeather = { cityName ->  homeScreenViewModel.searchWeather(cityName) }
+        onClickSearchWeather = { cityName -> homeScreenViewModel.searchWeather(cityName) }
     )
 }
 
@@ -64,22 +63,28 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
 
     Scaffold(containerColor = MaterialTheme.colorScheme.surfaceContainer) { contentPadding ->
 
-        when(homeUiState) {
+        when (homeUiState) {
             HomeUiState.Init -> {}
 
             HomeUiState.Loading -> {
-                CircularProgressIndicator()
+                MyProgressBar()
             }
 
             is HomeUiState.Success -> {
                 WeatherContentCard(
                     contentPadding = contentPadding,
-                    weatherData = homeUiState.weatherData,
+                    weatherDataUi = homeUiState.weatherDataUi,
                     onClickSearchWeather = { showInputDialog = true }
                 )
             }
 
             is HomeUiState.Error -> {
+                WeatherContentCard(
+                    contentPadding = contentPadding,
+                    weatherDataUi = homeUiState.previousData,
+                    onClickSearchWeather = { showInputDialog = true }
+                )
+
                 Toast.makeText(context, homeUiState.errorMessage, Toast.LENGTH_SHORT).show()
             }
         }
@@ -101,7 +106,11 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
 
 
 @Composable
-fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, onClickSearchWeather: () -> Unit) {
+fun WeatherContentCard(
+    contentPadding: PaddingValues,
+    weatherDataUi: WeatherDataUi,
+    onClickSearchWeather: () -> Unit
+) {
     Column(
         modifier = Modifier
             .padding(contentPadding)
@@ -121,7 +130,7 @@ fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, 
                 ) {
                     Column {
                         Text(
-                            text = weatherData.temp,
+                            text = weatherDataUi.temp,
                             style = MaterialTheme.typography.displayLarge,
                             fontWeight = FontWeight.Bold,
                         )
@@ -134,8 +143,8 @@ fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, 
                         modifier = Modifier
                             .size(50.dp)
                             .clip(RoundedCornerShape(8.dp)),
-                        model = weatherData.iconUrl, // Replace with your image URL
-                        contentDescription = weatherData.temp,
+                        model = weatherDataUi.iconUrl, // Replace with your image URL
+                        contentDescription = weatherDataUi.temp,
                         placeholder = painterResource(R.drawable.baseline_image_24),
                         error = painterResource(R.drawable.baseline_broken_image_24)
                     )
@@ -143,9 +152,9 @@ fun WeatherContentCard(contentPadding: PaddingValues, weatherData: WeatherData, 
                 VerticalSpacer(8.dp)
                 ExtraInformationCards(
                     mapOf(
-                        stringResource(R.string.feels_like) to weatherData.feelsLike,
-                        stringResource(R.string.min) to weatherData.minTemp,
-                        stringResource(R.string.max) to weatherData.maxTemp
+                        stringResource(R.string.feels_like) to weatherDataUi.feelsLike,
+                        stringResource(R.string.min) to weatherDataUi.minTemp,
+                        stringResource(R.string.max) to weatherDataUi.maxTemp
                     )
                 )
                 VerticalSpacer(8.dp)
@@ -204,7 +213,13 @@ fun HomeScreenContentPreview() {
     AndroidEngineerTestTheme {
         HomeScreenContent(
             homeUiState = HomeUiState.Success(
-                WeatherData(temp = "29", minTemp = "21", maxTemp = "35", feelsLike = "32", iconUrl = "")
+                WeatherDataUi(
+                    temp = "29",
+                    minTemp = "21",
+                    maxTemp = "35",
+                    feelsLike = "32",
+                    iconUrl = ""
+                )
             ),
             onClickSearchWeather = {}
         )

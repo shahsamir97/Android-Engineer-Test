@@ -1,6 +1,6 @@
-package com.example.android_engineer_test.model.user
+package com.example.android_engineer_test.model
 
-data class WeatherData(
+data class WeatherDataUi(
     val temp: String,
     val minTemp: String,
     val maxTemp: String,
