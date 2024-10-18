@@ -29,19 +29,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.android_engineer_test.R
 import com.example.android_engineer_test.ui.theme.AndroidEngineerTestTheme
 import com.example.android_engineer_test.ui.widgets.InputDialog
 import com.example.android_engineer_test.ui.widgets.VerticalSpacer
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(homeScreenViewModel: HomeScreenViewModel = viewModel()) {
 
-    HomeScreenContent(onClickSearchWeather = {})
+    HomeScreenContent(
+        onClickSearchWeather = { cityName ->  homeScreenViewModel.searchWeather(cityName) }
+    )
 }
 
 @Composable
-fun HomeScreenContent(onClickSearchWeather: () -> Unit) {
+fun HomeScreenContent(onClickSearchWeather: (cityName: String) -> Unit) {
     
     var showInputDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -103,7 +106,7 @@ fun HomeScreenContent(onClickSearchWeather: () -> Unit) {
             InputDialog(
                 title = stringResource(R.string.enter_a_location),
                 onClick = { inputValue ->
-
+                    onClickSearchWeather(inputValue)
                     showInputDialog = false
                 },
                 onDismiss = {
