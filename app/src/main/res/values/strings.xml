@@ -7,4 +7,5 @@
     <string name="feels_like">Feels Like</string>
     <string name="min">Min</string>
     <string name="max">Max</string>
+    <string name="celsius">C</string>
 </resources>

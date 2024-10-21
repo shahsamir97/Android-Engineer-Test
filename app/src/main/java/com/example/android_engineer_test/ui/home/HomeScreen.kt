@@ -3,10 +3,13 @@ package com.example.android_engineer_test.ui.home
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,10 +32,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.android_engineer_test.R
@@ -129,11 +135,22 @@ fun WeatherContentCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
-                        Text(
-                            text = weatherDataUi.temp,
-                            style = MaterialTheme.typography.displayLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Row {
+                            Text(
+                                text = weatherDataUi.temp,
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                            )
+                            Text(
+                                text = stringResource(R.string.celsius),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.W900,
+                                    baselineShift = BaselineShift(-.3f) // Adjust the value as needed
+                                )
+                            )
+                        }
                         Text(
                             text = stringResource(R.string.current_temperature),
                             color = MaterialTheme.colorScheme.onSurface
@@ -188,15 +205,23 @@ fun ExtraInformationCards(weatherExtraInfo: Map<String, String>) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(100.dp)
                         .padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = weatherInfo.value,
-                        style = MaterialTheme.typography.headlineLarge,
-                        textAlign = TextAlign.Center,
-                    )
+                    Box( modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            text = weatherInfo.value,
+                            style = MaterialTheme.typography.headlineLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                     Text(
                         text = weatherInfo.key,
                         style = MaterialTheme.typography.labelMedium

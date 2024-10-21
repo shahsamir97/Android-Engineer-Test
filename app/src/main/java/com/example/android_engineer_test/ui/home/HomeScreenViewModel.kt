@@ -15,6 +15,9 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Init)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState
 
+    private val _recentSearches = MutableStateFlow<List<String>>(listOf())
+    val recentSearches: StateFlow<List<String>> = _recentSearches
+
     private lateinit var previousData: WeatherDataUi
 
     init {
