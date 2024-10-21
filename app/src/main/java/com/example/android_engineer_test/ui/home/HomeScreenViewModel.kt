@@ -9,14 +9,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewModel() {
 
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Init)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState
-
-    private val _recentSearchesState = MutableStateFlow<ArrayList<String>>(ArrayList())
-    val recentSearchesState: StateFlow<List<String>> = _recentSearchesState
 
     private lateinit var _previousData: WeatherDataUi
     private val _recentSearchList  = ArrayList<String>()
@@ -43,29 +41,30 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
 
                     _previousData = weatherDataUi
                     _recentSearchList.add(cityName)
-                    _recentSearchesState.update { _recentSearchList }
-                    _homeUiState.update { HomeUiState.Success(weatherDataUi) }
+                    _homeUiState.update { HomeUiState.Success(weatherDataUi, _recentSearchList) }
                 } ?: throw IllegalArgumentException()
             }
             catch (exception: Exception) {
                 exception.printStackTrace()
 
                 exception.message?.let { errorMessage ->
-                    _homeUiState.update { HomeUiState.Error(errorMessage, _previousData) }
+                    _homeUiState.update { HomeUiState.Error(errorMessage, _previousData, _recentSearchList) }
                 }
             }
         }
     }
 
     fun clearRecentSearches() {
-        _recentSearchList.clear()
-        _recentSearchesState.value = _recentSearchList
+        runBlocking {
+            _recentSearchList.clear()
+            _homeUiState.value =  HomeUiState.Success(_previousData, _recentSearchList)
+        }
     }
 }
 
 sealed interface HomeUiState {
     data object Init: HomeUiState
     data object Loading: HomeUiState
-    data class Success(val weatherDataUi: WeatherDataUi): HomeUiState
-    data class Error(val errorMessage: String, val previousData: WeatherDataUi): HomeUiState
+    data class Success(val weatherDataUi: WeatherDataUi, val recentSearches: List<String>): HomeUiState
+    data class Error(val errorMessage: String, val previousData: WeatherDataUi, val recentSearches: List<String>): HomeUiState
 }

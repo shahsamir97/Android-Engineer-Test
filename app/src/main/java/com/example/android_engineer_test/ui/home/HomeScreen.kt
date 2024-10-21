@@ -1,6 +1,7 @@
 package com.example.android_engineer_test.ui.home
 
 import android.content.res.Configuration
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -65,11 +64,9 @@ fun HomeScreen(
     }
 ) {
     val homeUiState by homeScreenViewModel.homeUiState.collectAsStateWithLifecycle()
-    val recentSearchState by homeScreenViewModel.recentSearchesState.collectAsStateWithLifecycle()
 
     HomeScreenContent(
         homeUiState = homeUiState,
-        recentSearchState = recentSearchState,
         onClickSearchWeather = { cityName -> homeScreenViewModel.searchWeather(cityName) },
         onClearRecentSearch = { homeScreenViewModel.clearRecentSearches() }
     )
@@ -79,7 +76,6 @@ fun HomeScreen(
 @Composable
 fun HomeScreenContent(
     homeUiState: HomeUiState,
-    recentSearchState: List<String>,
     onClickSearchWeather: (cityName: String) -> Unit,
     onClearRecentSearch: () -> Unit,
 ) {
@@ -99,8 +95,8 @@ fun HomeScreenContent(
             is HomeUiState.Success -> {
                 WeatherContentCard(
                     contentPadding = contentPadding,
-                    recentSearchState = recentSearchState,
                     weatherDataUi = homeUiState.weatherDataUi,
+                    recentSearches = homeUiState.recentSearches,
                     onClickSearchWeather = { showInputDialog = true },
                     onClearRecentSearch = onClearRecentSearch,
                     onClickCityName = { cityName-> onClickSearchWeather(cityName)  }
@@ -110,8 +106,8 @@ fun HomeScreenContent(
             is HomeUiState.Error -> {
                 WeatherContentCard(
                     contentPadding = contentPadding,
-                    recentSearchState = recentSearchState,
                     weatherDataUi = homeUiState.previousData,
+                    recentSearches = homeUiState.recentSearches,
                     onClickSearchWeather = { showInputDialog = true },
                     onClearRecentSearch = onClearRecentSearch,
                     onClickCityName = {  }
@@ -152,7 +148,7 @@ fun HomeScreenContent(
 fun WeatherContentCard(
     contentPadding: PaddingValues,
     weatherDataUi: WeatherDataUi,
-    recentSearchState: List<String>,
+    recentSearches: List<String>,
     onClickSearchWeather: () -> Unit,
     onClearRecentSearch: () -> Unit,
     onClickCityName: (cityName: String) -> Unit,
@@ -162,81 +158,90 @@ fun WeatherContentCard(
             .padding(contentPadding)
             .padding(16.dp)
     ) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        MainWeatherInfoCard(weatherDataUi, onClickSearchWeather)
+        VerticalSpacer(24.dp)
+        RecentSearches(
+            recentSearches = recentSearches,
+            onClearRecentSearch = onClearRecentSearch,
+            onClickCityName = { cityName ->
+                onClickCityName(cityName)
+            }
+        )
+    }
+}
+
+@Composable
+private fun MainWeatherInfoCard(
+    weatherDataUi: WeatherDataUi,
+    onClickSearchWeather: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Row {
-                            Text(
-                                text = weatherDataUi.temp,
-                                style = MaterialTheme.typography.displayMedium,
-                                fontWeight = FontWeight.W900,
-                            )
-                            Text(
-                                text = stringResource(R.string.celsius),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                style = TextStyle(
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.W900,
-                                    baselineShift = BaselineShift(-.3f) // Adjust the value as needed
-                                )
-                            )
-                        }
+                Column {
+                    Row {
                         Text(
-                            text = stringResource(R.string.current_temperature),
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = weatherDataUi.temp,
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.W900,
+                        )
+                        Text(
+                            text = stringResource(R.string.celsius),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.W900,
+                                baselineShift = BaselineShift(-.3f) // Adjust the value as needed
+                            )
                         )
                     }
-                    AsyncImage(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        model = weatherDataUi.iconUrl, // Replace with your image URL
-                        contentDescription = weatherDataUi.temp,
-                        placeholder = painterResource(R.drawable.baseline_image_24),
-                        error = painterResource(R.drawable.baseline_broken_image_24)
+                    Text(
+                        text = stringResource(R.string.current_temperature),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                VerticalSpacer(8.dp)
-                ExtraInformationCards(
-                    mapOf(
-                        stringResource(R.string.feels_like) to weatherDataUi.feelsLike,
-                        stringResource(R.string.min) to weatherDataUi.minTemp,
-                        stringResource(R.string.max) to weatherDataUi.maxTemp
-                    )
-                )
-                VerticalSpacer(8.dp)
-                MyButton(
-                    title = stringResource(R.string.search_a_new_location),
-                    onClick = onClickSearchWeather,
+                AsyncImage(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    model = weatherDataUi.iconUrl, // Replace with your image URL
+                    contentDescription = weatherDataUi.temp,
+                    placeholder = painterResource(R.drawable.baseline_image_24),
+                    error = painterResource(R.drawable.baseline_broken_image_24)
                 )
             }
-        }
-        VerticalSpacer(24.dp)
-
-        if (recentSearchState.isNotEmpty()) {
-            RecentSearches(
-                recentSearchState,
-                onClearRecentSearch = onClearRecentSearch,
-                onClickCityName = {cityName ->
-                    onClickCityName(cityName)
-                }
+            VerticalSpacer(8.dp)
+            ExtraInformationCards(
+                mapOf(
+                    stringResource(R.string.feels_like) to weatherDataUi.feelsLike,
+                    stringResource(R.string.min) to weatherDataUi.minTemp,
+                    stringResource(R.string.max) to weatherDataUi.maxTemp
+                )
+            )
+            VerticalSpacer(8.dp)
+            MyButton(
+                title = stringResource(R.string.search_a_new_location),
+                onClick = onClickSearchWeather,
             )
         }
     }
 }
 
 @Composable
-fun RecentSearches(list: List<String>, onClearRecentSearch: () -> Unit, onClickCityName: (cityName: String) -> Unit) {
+fun RecentSearches(
+    recentSearches: List<String>,
+    onClearRecentSearch: () -> Unit,
+    onClickCityName: (cityName: String) -> Unit,
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -252,7 +257,7 @@ fun RecentSearches(list: List<String>, onClearRecentSearch: () -> Unit, onClickC
             VerticalSpacer(8.dp)
             LazyColumn(modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Center) {
-                items(list) { cityName ->
+                items(recentSearches) { cityName ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -329,11 +334,11 @@ fun HomeScreenContentPreview() {
                     maxTemp = "35",
                     feelsLike = "32",
                     iconUrl = ""
-                )
+                ),
+                recentSearches = listOf("Dhaka", "Chittagong")
             ),
             onClickSearchWeather = {},
             onClearRecentSearch = {},
-            recentSearchState = listOf("Dhaka", "Chittagong")
         )
     }
 }
