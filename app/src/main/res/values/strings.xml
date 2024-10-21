@@ -8,4 +8,6 @@
     <string name="min">Min</string>
     <string name="max">Max</string>
     <string name="celsius">C</string>
+    <string name="recent_searches">Recent Searches</string>
+    <string name="clear_recent_searches">Clear Recent Searches</string>
 </resources>

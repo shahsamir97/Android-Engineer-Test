@@ -7,19 +7,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,9 +49,11 @@ import coil.compose.AsyncImage
 import com.example.android_engineer_test.R
 import com.example.android_engineer_test.model.WeatherDataUi
 import com.example.android_engineer_test.ui.theme.AndroidEngineerTestTheme
-import com.example.android_engineer_test.ui.widgets.InputDialog
+import com.example.android_engineer_test.ui.widgets.BottomSheetContent
+import com.example.android_engineer_test.ui.widgets.MyButton
 import com.example.android_engineer_test.ui.widgets.MyProgressBar
 import com.example.android_engineer_test.ui.widgets.VerticalSpacer
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -58,14 +65,21 @@ fun HomeScreen(
 
     HomeScreenContent(
         homeUiState = homeUiState,
-        onClickSearchWeather = { cityName -> homeScreenViewModel.searchWeather(cityName) }
+        onClickSearchWeather = { cityName -> homeScreenViewModel.searchWeather(cityName) },
+        onClearRecentSearch = { }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName: String) -> Unit) {
+fun HomeScreenContent(
+    homeUiState: HomeUiState,
+    onClickSearchWeather: (cityName: String) -> Unit,
+    onClearRecentSearch: () -> Unit,
+) {
     val context = LocalContext.current
     var showInputDialog by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(containerColor = MaterialTheme.colorScheme.surfaceContainer) { contentPadding ->
 
@@ -80,7 +94,8 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
                 WeatherContentCard(
                     contentPadding = contentPadding,
                     weatherDataUi = homeUiState.weatherDataUi,
-                    onClickSearchWeather = { showInputDialog = true }
+                    onClickSearchWeather = { showInputDialog = true },
+                    onClearRecentSearch = onClearRecentSearch
                 )
             }
 
@@ -88,7 +103,8 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
                 WeatherContentCard(
                     contentPadding = contentPadding,
                     weatherDataUi = homeUiState.previousData,
-                    onClickSearchWeather = { showInputDialog = true }
+                    onClickSearchWeather = { showInputDialog = true },
+                    onClearRecentSearch = onClearRecentSearch
                 )
 
                 Toast.makeText(context, homeUiState.errorMessage, Toast.LENGTH_SHORT).show()
@@ -96,16 +112,27 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
         }
 
         if (showInputDialog) {
-            InputDialog(
-                title = stringResource(R.string.enter_a_location),
-                onClick = { inputValue ->
-                    onClickSearchWeather(inputValue)
-                    showInputDialog = false
-                },
-                onDismiss = {
-                    showInputDialog = false
-                }
-            )
+            ModalBottomSheet(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(16.dp),
+                sheetState = bottomSheetState,
+                onDismissRequest = { showInputDialog = false },
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                dragHandle = {},
+                containerColor = Color.Transparent,
+            ) {
+                BottomSheetContent(
+                    title = stringResource(R.string.enter_a_location),
+                    onClick = { inputValue ->
+                        onClickSearchWeather(inputValue)
+                        showInputDialog = false
+                    },
+                    onDismiss = {
+                        showInputDialog = false
+                    }
+                )
+            }
         }
     }
 }
@@ -115,7 +142,8 @@ fun HomeScreenContent(homeUiState: HomeUiState, onClickSearchWeather: (cityName:
 fun WeatherContentCard(
     contentPadding: PaddingValues,
     weatherDataUi: WeatherDataUi,
-    onClickSearchWeather: () -> Unit
+    onClickSearchWeather: () -> Unit,
+    onClearRecentSearch: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -128,7 +156,7 @@ fun WeatherContentCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(16.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -138,8 +166,8 @@ fun WeatherContentCard(
                         Row {
                             Text(
                                 text = weatherDataUi.temp,
-                                style = MaterialTheme.typography.displayLarge,
-                                fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.displayMedium,
+                                fontWeight = FontWeight.W900,
                             )
                             Text(
                                 text = stringResource(R.string.celsius),
@@ -175,19 +203,51 @@ fun WeatherContentCard(
                     )
                 )
                 VerticalSpacer(8.dp)
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
+                MyButton(
+                    title = stringResource(R.string.search_a_new_location),
                     onClick = onClickSearchWeather,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.search_a_new_location),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                )
+            }
+        }
+        VerticalSpacer(24.dp)
+        RecentSearches(
+            listOf("Dhaka", "Chittagong"),
+            onClearRecentSearch = onClearRecentSearch
+        )
+    }
+}
+
+@Composable
+fun RecentSearches(list: List<String>, onClearRecentSearch: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.recent_searches),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            VerticalSpacer(8.dp)
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                items(list) { cityName ->
+                    Row {
+                        Text(
+                            text = cityName,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                    VerticalSpacer(8.dp)
                 }
             }
+            VerticalSpacer(6.dp)
+            MyButton(
+                title = stringResource(R.string.clear_recent_searches),
+                onClick = {},
+            )
         }
     }
 }
@@ -217,14 +277,15 @@ fun ExtraInformationCards(weatherExtraInfo: Map<String, String>) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.Center),
-                            text = weatherInfo.value,
-                            style = MaterialTheme.typography.headlineLarge,
+                            text = weatherInfo.value + stringResource(R.string.celsius),
+                            style = MaterialTheme.typography.headlineMedium,
                             textAlign = TextAlign.Center,
                         )
                     }
                     Text(
-                        text = weatherInfo.key,
-                        style = MaterialTheme.typography.labelMedium
+                        text = weatherInfo.key.uppercase(Locale.ROOT),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
             }
@@ -246,7 +307,8 @@ fun HomeScreenContentPreview() {
                     iconUrl = ""
                 )
             ),
-            onClickSearchWeather = {}
+            onClickSearchWeather = {},
+            onClearRecentSearch = {}
         )
     }
 }

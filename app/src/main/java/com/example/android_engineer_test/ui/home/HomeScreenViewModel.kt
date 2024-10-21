@@ -33,10 +33,10 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
 
                 result.main?.let { mainWeatherInfo ->
                     val weatherDataUi = WeatherDataUi(
-                        temp = mainWeatherInfo.temp.toString(),
-                        minTemp = mainWeatherInfo.temp_min.toString(),
-                        maxTemp = mainWeatherInfo.temp_max.toString(),
-                        feelsLike = mainWeatherInfo.feels_like.toString(),
+                        temp = mainWeatherInfo.temp?.toInt().toString(),
+                        minTemp = mainWeatherInfo.temp_min?.toInt().toString(),
+                        maxTemp = mainWeatherInfo.temp_max?.toInt().toString(),
+                        feelsLike = mainWeatherInfo.feels_like?.toInt().toString(),
                         iconUrl = result.weather?.let { createImageLink(it[0].icon.toString()) } ?: ""
                     )
 
