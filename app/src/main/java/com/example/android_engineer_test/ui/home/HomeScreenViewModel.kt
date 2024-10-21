@@ -15,10 +15,11 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Init)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState
 
-    private val _recentSearches = MutableStateFlow<List<String>>(listOf())
-    val recentSearches: StateFlow<List<String>> = _recentSearches
+    private val _recentSearchesState = MutableStateFlow<ArrayList<String>>(ArrayList())
+    val recentSearchesState: StateFlow<List<String>> = _recentSearchesState
 
-    private lateinit var previousData: WeatherDataUi
+    private lateinit var _previousData: WeatherDataUi
+    private val _recentSearchList  = ArrayList<String>()
 
     init {
         searchWeather("Dhaka")
@@ -40,7 +41,9 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
                         iconUrl = result.weather?.let { createImageLink(it[0].icon.toString()) } ?: ""
                     )
 
-                    previousData = weatherDataUi
+                    _previousData = weatherDataUi
+                    _recentSearchList.add(cityName)
+                    _recentSearchesState.update { _recentSearchList }
                     _homeUiState.update { HomeUiState.Success(weatherDataUi) }
                 } ?: throw IllegalArgumentException()
             }
@@ -48,10 +51,15 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
                 exception.printStackTrace()
 
                 exception.message?.let { errorMessage ->
-                    _homeUiState.update { HomeUiState.Error(errorMessage, previousData) }
+                    _homeUiState.update { HomeUiState.Error(errorMessage, _previousData) }
                 }
             }
         }
+    }
+
+    fun clearRecentSearches() {
+        _recentSearchList.clear()
+        _recentSearchesState.value = _recentSearchList
     }
 }
 
