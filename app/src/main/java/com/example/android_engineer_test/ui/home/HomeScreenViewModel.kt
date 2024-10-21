@@ -55,10 +55,8 @@ class HomeScreenViewModel(private val homeScreenRepo: HomeScreenRepo) : ViewMode
     }
 
     fun clearRecentSearches() {
-        runBlocking {
-            _recentSearchList.clear()
-            _homeUiState.value =  HomeUiState.Success(_previousData, _recentSearchList)
-        }
+        _recentSearchList.clear()
+        _homeUiState.value = HomeUiState.Success(_previousData, _recentSearchList)
     }
 }
 
